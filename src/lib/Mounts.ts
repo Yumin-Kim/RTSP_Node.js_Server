@@ -1,8 +1,8 @@
-import { Mount } from './Mount';
-import { PublishServerHooksConfig } from './PublishServer';
-import { getDebugger, getMountInfo } from './utils';
+import { Mount } from "./Mount";
+import { PublishServerHooksConfig } from "./PublishServer";
+import { getDebugger, getMountInfo } from "./utils";
 
-const debug = getDebugger('Mounts');
+const debug = getDebugger("Mounts");
 
 export interface MountsConfig {
   rtpPortCount: number;
@@ -13,42 +13,54 @@ export class Mounts {
   mounts: { [path: string]: Mount | undefined };
   rtpPorts: number[];
 
-  constructor (config: MountsConfig) {
+  constructor(config: MountsConfig) {
     this.mounts = {};
 
     this.rtpPorts = []; // It is assumed that each start port has a correlating end port of start+1
 
-    for (let i = config.rtpPortStart; i < config.rtpPortStart + config.rtpPortCount; i = i + 2) {
+    for (
+      let i = config.rtpPortStart;
+      i < config.rtpPortStart + config.rtpPortCount;
+      i = i + 2
+    ) {
       this.rtpPorts.push(i);
     }
   }
 
-  getMount (uri: string) {
+  getMount(uri: string) {
+    console.log("GetMout", uri);
+
     let info = getMountInfo(uri);
 
-    return this.mounts[info.path];
+    console.log("GetMout info ", info);
+    let urltext = "";
+    info.path.match(/\/+(\w|\=)*/g)!.forEach((v) => {
+      if (v.includes("=")) return;
+      urltext += v;
+    });
+    return this.mounts[urltext];
   }
 
-  addMount (uri: string, sdp: string, hooks?: PublishServerHooksConfig): Mount {
-    debug('Adding mount with path %s and SDP %O', uri, sdp);
+  addMount(uri: string, sdp: string, hooks?: PublishServerHooksConfig): Mount {
+    debug("Adding mount with path %s and SDP %O", uri, sdp);
     const info = getMountInfo(uri);
     const mount = new Mount(this, info.path, sdp, hooks);
     this.mounts[info.path] = mount;
     return mount;
   }
 
-  getNextRtpPort (): number | undefined {
-    debug('%d rtp ports remaining', this.rtpPorts.length - 1);
+  getNextRtpPort(): number | undefined {
+    debug("%d rtp ports remaining", this.rtpPorts.length - 1);
     return this.rtpPorts.shift();
   }
 
-  returnRtpPortToPool (port: number): void {
-    debug('%d rtp ports remaining', this.rtpPorts.length + 1);
+  returnRtpPortToPool(port: number): void {
+    debug("%d rtp ports remaining", this.rtpPorts.length + 1);
     this.rtpPorts.push(port);
   }
 
-  deleteMount (uri: string): boolean {
-    debug('Removing mount with path %s', uri);
+  deleteMount(uri: string): boolean {
+    debug("Removing mount with path %s", uri);
     let info = getMountInfo(uri);
 
     const mount = this.mounts[info.path];
@@ -63,5 +75,4 @@ export class Mounts {
 
     return false;
   }
-
 }

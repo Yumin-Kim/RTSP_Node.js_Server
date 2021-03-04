@@ -1,5 +1,5 @@
-import debug, { IDebugger } from 'debug';
-import { URL } from 'url';
+import debug, { IDebugger } from "debug";
+import { URL } from "url";
 
 const mountRegex = /(\/\S+)(?:\/streamid=)(\d+)/;
 
@@ -8,15 +8,14 @@ export interface MountInfo {
   streamId: number;
 }
 
-export function getMountInfo (uri: string): MountInfo {
+export function getMountInfo(uri: string): MountInfo {
   let urlObj = new URL(uri);
-
   let mount = {
     path: urlObj.pathname,
-    streamId: -1
+    streamId: -1,
   };
 
-  if (urlObj.pathname.indexOf('streamid') > -1) {
+  if (urlObj.pathname.indexOf("streamid") > -1) {
     const match = urlObj.pathname.match(mountRegex);
 
     if (match) {
@@ -28,6 +27,6 @@ export function getMountInfo (uri: string): MountInfo {
   return mount;
 }
 
-export function getDebugger (name: string): IDebugger {
+export function getDebugger(name: string): IDebugger {
   return debug(`rtsp-streaming-server:${name}`);
 }

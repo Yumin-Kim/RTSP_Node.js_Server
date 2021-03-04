@@ -1,12 +1,12 @@
-import { v4 as uuid } from 'uuid';
+import { v4 as uuid } from "uuid";
 
-import { Client } from './Client';
-import { Mounts } from './Mounts';
-import { PublishServerHooksConfig } from './PublishServer';
-import { RtpUdp } from './RtpUdp';
-import { getDebugger, getMountInfo } from './utils';
+import { Client } from "./Client";
+import { Mounts } from "./Mounts";
+import { PublishServerHooksConfig } from "./PublishServer";
+import { RtpUdp } from "./RtpUdp";
+import { getDebugger, getMountInfo } from "./utils";
 
-const debug = getDebugger('Mount');
+const debug = getDebugger("Mount");
 
 export type RtspStream = {
   id: number; // Not a UUID, this is the streamId in the RTSP spec
@@ -23,7 +23,7 @@ export class Mount {
   mounts: Mounts;
   path: string;
   streams: {
-    [streamId: number]: RtspStream // This is the RTSP streamId Number, not a UUID
+    [streamId: number]: RtspStream; // This is the RTSP streamId Number, not a UUID
   };
 
   sdp: string;
@@ -31,7 +31,12 @@ export class Mount {
 
   hooks?: PublishServerHooksConfig;
 
-  constructor (mounts: Mounts, path: string, sdpBody: string, hooks?: PublishServerHooksConfig) {
+  constructor(
+    mounts: Mounts,
+    path: string,
+    sdpBody: string,
+    hooks?: PublishServerHooksConfig
+  ) {
     this.id = uuid();
     this.mounts = mounts;
     this.path = path;
@@ -41,33 +46,32 @@ export class Mount {
 
     this.sdp = sdpBody;
 
-    debug('Set up mount at path %s', path);
+    debug("Set up mount at path %s", path);
   }
 
-  createStream (uri: string) {
+  createStream(uri: string) {
     const info = getMountInfo(uri);
 
     const nextPort = this.mounts.getNextRtpPort();
 
     if (!nextPort) {
-      throw new Error('No ports available to create the stream');
+      throw new Error("No ports available to create the stream");
     }
 
-    debug('Setting up stream %s on path %s', info.streamId, info.path);
+    debug("Setting up stream %s on path %s", info.streamId, info.path);
 
     this.streams[info.streamId] = {
       clients: {},
       id: info.streamId,
       mount: this,
       rtpEndPort: nextPort + 1, // RTCP
-      rtpStartPort: nextPort // RTP
+      rtpStartPort: nextPort, // RTP
     };
 
     return this.streams[info.streamId];
-
   }
 
-  async setup (): Promise<void> {
+  async setup(): Promise<void> {
     let portError = false;
 
     for (let id in this.streams) {
@@ -81,8 +85,10 @@ export class Mount {
         await stream.listenerRtcp.listen();
       } catch (e) {
         // One or two of the ports was in use, cycle them out and try another
-        if (e.errno && e.errno === 'EADDRINUSE') {
-          console.warn(`Port error on ${e.port}, for stream ${stream.id} using another port`);
+        if (e.errno && e.errno === "EADDRINUSE") {
+          console.warn(
+            `Port error on ${e.port}, for stream ${stream.id} using another port`
+          );
           portError = true;
 
           try {
@@ -96,7 +102,7 @@ export class Mount {
           this.mounts.returnRtpPortToPool(stream.rtpStartPort);
           const nextStartPort = this.mounts.getNextRtpPort();
           if (!nextStartPort) {
-            throw new Error('Unable to get another start port');
+            throw new Error("Unable to get another start port");
           }
 
           stream.rtpStartPort = nextStartPort;
@@ -113,7 +119,7 @@ export class Mount {
     }
   }
 
-  close () {
+  close() {
     let ports = [];
 
     for (let id in this.streams) {
@@ -121,7 +127,7 @@ export class Mount {
       if (stream) {
         for (let id in stream.clients) {
           const client = stream.clients[id];
-          console.log('Closing Client', client.id);
+          console.log("Closing Client", client.id);
           client.close();
         }
 
@@ -135,7 +141,7 @@ export class Mount {
     return ports;
   }
 
-  clientLeave (client: Client) {
+  clientLeave(client: Client) {
     delete this.streams[client.stream.id].clients[client.id];
     let empty: boolean = true;
     for (let stream in this.streams) {
