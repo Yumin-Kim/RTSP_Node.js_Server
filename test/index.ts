@@ -37,9 +37,8 @@ async function checkMount(req: any): Promise<boolean> {
   const url = new URL(req.uri);
   if (url.pathname === "/web/app") {
     console.log("CheckMount");
-
-    return true;
   }
+  return true;
 
   return false;
 }

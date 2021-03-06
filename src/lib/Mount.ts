@@ -73,7 +73,7 @@ export class Mount {
 
   async setup(): Promise<void> {
     let portError = false;
-
+    console.log("setup");
     for (let id in this.streams) {
       let stream = this.streams[id];
 
@@ -82,7 +82,9 @@ export class Mount {
 
       try {
         await stream.listenerRtp.listen();
-        await stream.listenerRtcp.listen();
+        // await stream.listenerRtp.close();
+        // await stream.listenerRtcp.listen();
+        // await stream.listenerRtcp.close();
       } catch (e) {
         // One or two of the ports was in use, cycle them out and try another
         if (e.errno && e.errno === "EADDRINUSE") {
